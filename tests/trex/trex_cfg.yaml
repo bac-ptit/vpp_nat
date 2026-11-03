@@ -1,0 +1,19 @@
+### TRex dual-port hardware configuration mapping for NAT44 testing
+- port_limit: 2
+  version: 2
+  interfaces: ['0000:03:00.0', '0000:03:00.1']
+  port_info:
+    - ip: 10.10.0.2
+      default_gw: 10.10.0.254     # Inside VRRP VIP
+      dest_mac: '52:54:00:12:34:56'
+      src_mac: '52:54:00:12:34:01'
+    - ip: 198.18.0.2
+      default_gw: 198.18.0.254   # Outside VRRP VIP
+      dest_mac: '52:54:00:12:34:57'
+      src_mac: '52:54:00:12:34:02'
+  platform:
+    master_thread_id: 0
+    latency_thread_id: 6
+    dual_if:
+      - socket: 0
+        threads: [12, 13, 14, 15]
