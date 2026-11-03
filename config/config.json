@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "nat_engine": {
+    "sessions_per_worker": 2000000,
+    "max_translations_per_thread": 2500000,
+    "vector_batch_size": 256,
+    "prefetch_distance": 4,
+    "port_block_allocation": {
+      "enabled": true,
+      "block_size": 64,
+      "max_blocks_per_user": 8
+    },
+    "timeouts": {
+      "udp": 15,
+      "tcp_established": 3600,
+      "tcp_transitory": 15,
+      "icmp": 15
+    }
+  },
+  "topology": {
+    "inside": {
+      "interface_name": "inside0",
+      "pci_address": "0000:03:00.0",
+      "subnet_cidr": "10.10.0.0/24",
+      "gateway_ip": "10.10.0.1",
+      "vrrp_vip": "10.10.0.254",
+      "vrrp_vrid": 10
+    },
+    "outside": {
+      "interface_name": "outside0",
+      "pci_address": "0000:03:00.1",
+      "subnet_cidr": "198.18.0.0/24",
+      "gateway_ip": "198.18.0.1",
+      "vrrp_vip": "198.18.0.254",
+      "vrrp_vrid": 20
+    },
+    "hasync": {
+      "interface_name": "hasync0",
+      "pci_address": "0000:04:00.0",
+      "subnet_cidr": "172.30.0.0/30"
+    }
+  },
+  "public_pool": {
+    "start_ip": "203.0.113.1",
+    "end_ip": "203.0.113.32",
+    "vrrp_managed": true
+  },
+  "nodes": {
+    "node1": {
+      "vpp_api_socket": "/run/vpp/api-node1.sock",
+      "vpp_cli_socket": "/run/vpp/cli-node1.sock",
+      "ha_local_ip": "127.0.0.1",
+      "ha_local_port": 1234,
+      "ha_peer_ip": "127.0.0.1",
+      "ha_peer_port": 1235,
+      "ha_refresh_interval_sec": 10,
+      "vrrp_priority": 200
+    },
+    "node2": {
+      "vpp_api_socket": "/run/vpp/api-node2.sock",
+      "vpp_cli_socket": "/run/vpp/cli-node2.sock",
+      "ha_local_ip": "127.0.0.1",
+      "ha_local_port": 1235,
+      "ha_peer_ip": "127.0.0.1",
+      "ha_peer_port": 1234,
+      "ha_refresh_interval_sec": 10,
+      "vrrp_priority": 100
+    }
+  }
+}
