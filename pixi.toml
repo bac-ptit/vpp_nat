@@ -20,6 +20,9 @@ test = { cmd = "ctest --preset release", depends-on = ["build"] }
 configure-ha = "cmake --preset release-ha"
 build-ha = { cmd = "cmake --build --preset release-ha", depends-on = ["configure-ha"] }
 test-ha = { cmd = "ctest --preset release-ha", depends-on = ["build-ha"] }
+configure-flat = "cmake --preset release-flat"
+build-flat = { cmd = "cmake --build --preset release-flat", depends-on = ["configure-flat"] }
+test-flat = { cmd = "ctest --test-dir build-flat --output-on-failure", depends-on = ["build-flat"] }
 clean = "rm -rf build target"
 fmt = "clang-format -i src/control/*.cpp src/control/*.hpp src/plugin/*.c src/plugin/*.h src/plugin/*.cpp src/plugin/*.hpp tests/*.cpp include/**/*.h include/**/*.hpp"
 
@@ -47,8 +50,14 @@ bench-scaling = "bash tests/bench_thread_scaling.sh 30"
 bench-scaling-quick = "bash tests/bench_thread_scaling.sh 5"
 bench-scaling-1s = "bash tests/bench_thread_scaling.sh 1"
 bench-scaling-strong = "sudo env NAT_BENCH_TOTAL_SESSIONS=48000 ./build/tests/bench_real_churn_10s scaling 5"
-bench-perf = "perf stat -e cycles,instructions,LLC-load-misses,dTLB-load-misses ./build/tests/bench_real_churn_10s 64 5 16"
-bench-1s = "./build/tests/bench_real_churn_10s all 1"
+bench-perf = "perf stat -e cycles,instructions,LLC-load-misses,dTLB-load-misses ./build/tests/bench_real_churn_10s 64-up 5 16"
+bench-1s = "./build/tests/bench_real_churn_10s 64-up 1 16"
+bench-strong-1 = "sudo env NAT_BENCH_CHURN=0 NAT_BENCH_TOTAL_SESSIONS=100000 NAT_BENCH_MAX_SESSIONS=100000 NAT_BENCH_BATCH=256 NAT_BENCH_LAZY=1 ./build/tests/bench_real_churn_10s 64-up 5 1"
+bench-strong-8 = "sudo env NAT_BENCH_CHURN=0 NAT_BENCH_TOTAL_SESSIONS=100000 NAT_BENCH_MAX_SESSIONS=12500 NAT_BENCH_BATCH=256 NAT_BENCH_LAZY=1 ./build/tests/bench_real_churn_10s 64-up 5 8"
+bench-strong-16 = "sudo env NAT_BENCH_CHURN=0 NAT_BENCH_TOTAL_SESSIONS=100000 NAT_BENCH_MAX_SESSIONS=6250 NAT_BENCH_BATCH=256 NAT_BENCH_LAZY=1 ./build/tests/bench_real_churn_10s 64-up 5 16"
+bench-churn-1 = "sudo env NAT_BENCH_CHURN=15 NAT_BENCH_POOL=30000 NAT_BENCH_MAX_SESSIONS=64000 NAT_BENCH_BATCH=256 NAT_BENCH_LAZY=1 ./build/tests/bench_real_churn_10s 64-up 10 1"
+bench-churn-8 = "sudo env NAT_BENCH_CHURN=15 NAT_BENCH_POOL=30000 NAT_BENCH_MAX_SESSIONS=64000 NAT_BENCH_BATCH=256 NAT_BENCH_LAZY=1 ./build/tests/bench_real_churn_10s 64-up 10 8"
+bench-churn-16 = "sudo env NAT_BENCH_CHURN=15 NAT_BENCH_POOL=30000 NAT_BENCH_MAX_SESSIONS=64000 NAT_BENCH_BATCH=256 NAT_BENCH_LAZY=1 ./build/tests/bench_real_churn_10s 64-up 10 16"
 bench-1t = "./build/tests/bench_real_churn_10s 64 30 1"
 bench-8t = "./build/tests/bench_real_churn_10s 64 30 8"
 bench-16t = "./build/tests/bench_real_churn_10s 64 30 16"

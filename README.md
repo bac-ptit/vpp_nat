@@ -95,20 +95,26 @@ flowchart LR
 
 ### Release build
 
+Pixi wraps the configure, build, and test workflow:
+
 ```bash
-cmake --preset release
-cmake --build --preset release -j"$(nproc)"
-ctest --test-dir build --output-on-failure
+pixi run configure   # cmake --preset release
+pixi run build       # cmake --build --preset release
+pixi run test        # ctest --preset release
 ```
 
 The plugin is produced at `build/lib/vpp_plugins/nat_pba_plugin.so`.
-The control daemon is produced at `build/nat-ctl`.
+The control daemon is produced at `build/src/control/nat-ctl`.
 
-### Hugepages and test topology
+### Hugepages, topology, and VPP
 
 ```bash
-sudo bash config/setup_hugepages.sh
-sudo bash config/setup_subnets.sh
+pixi run setup-host       # reserve hugepages
+pixi run setup-subnets    # create the inside/outside network namespaces
+pixi run install-plugin   # install the built plugin for the system VPP
+pixi run vpp-restart
+pixi run vpp-status
+pixi run cli-node1        # open the node1 VPP CLI socket
 ```
 
 ## Configuration
@@ -116,8 +122,14 @@ sudo bash config/setup_subnets.sh
 `nat-ctl` reads the same configuration schema from YAML or JSON:
 
 ```bash
-./build/nat-ctl --config config/config.yaml --node node1
-./build/nat-ctl -c config/config.json -n node2
+pixi run run-ctl-node1
+pixi run run-ctl-node2
+```
+
+For a direct invocation with a custom file:
+
+```bash
+./build/src/control/nat-ctl -c config/config.json -n node2
 ```
 
 The relevant VPP plugin settings are applied through the plugin CLI:
@@ -202,28 +214,36 @@ lower than the 0% strong-scaling reference.
 
 ### Reproduce
 
+The pixi tasks encode the benchmark environment variables and CLI arguments:
+
 ```bash
-# Strong scaling, 100k active, 0% churn, 16 workers
+# Strong scaling, 100k active, 0% churn
+pixi run bench-strong-1
+pixi run bench-strong-8
+pixi run bench-strong-16
+
+# 15% telecom churn, 1.024M active at 16 workers
+pixi run bench-churn-1
+pixi run bench-churn-8
+pixi run bench-churn-16
+```
+
+For a custom run, use the direct command:
+
+```bash
 sudo env NAT_BENCH_CHURN=0 \
   NAT_BENCH_TOTAL_SESSIONS=100000 \
   NAT_BENCH_MAX_SESSIONS=6250 \
   NAT_BENCH_BATCH=256 \
   NAT_BENCH_LAZY=1 \
   ./build/tests/bench_real_churn_10s 64-up 5 16
-
-# 15% telecom churn, 1.024M active, 16 workers
-sudo env NAT_BENCH_CHURN=15 \
-  NAT_BENCH_POOL=30000 \
-  NAT_BENCH_MAX_SESSIONS=64000 \
-  NAT_BENCH_BATCH=256 \
-  NAT_BENCH_LAZY=1 \
-  ./build/tests/bench_real_churn_10s 64-up 10 16
 ```
 
 ## Tests
 
 ```bash
-ctest --test-dir build --output-on-failure
+pixi run test        # ctest --preset release
+pixi run test-ha     # ctest --preset release-ha
 ```
 
 The suite covers:
@@ -239,8 +259,9 @@ Optional experimental builds:
 
 ```bash
 # Flat 16-byte hash backend
-cmake --preset release-flat
-cmake --build --preset release-flat -j"$(nproc)"
+pixi run configure-flat
+pixi run build-flat
+pixi run test-flat
 
 # Profile attribution build
 cmake -B build-prof -G Ninja -DCMAKE_BUILD_TYPE=Release \
