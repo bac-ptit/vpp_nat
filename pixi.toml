@@ -1,0 +1,69 @@
+[workspace]
+name = "nat"
+version = "0.1.0"
+description = "High-Performance HA NAT44 Solution on FD.io VPP with Glaze Config"
+authors = ["High-Performance Networking Team"]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+cmake = ">=3.28"
+ninja = ">=1.11"
+pkg-config = ">=0.29"
+python = ">=3.11"
+
+[tasks]
+# Configuration and Compilation
+configure = "cmake --preset release"
+build = { cmd = "cmake --build --preset release", depends-on = ["configure"] }
+test = { cmd = "ctest --preset release", depends-on = ["build"] }
+configure-ha = "cmake --preset release-ha"
+build-ha = { cmd = "cmake --build --preset release-ha", depends-on = ["configure-ha"] }
+test-ha = { cmd = "ctest --preset release-ha", depends-on = ["build-ha"] }
+clean = "rm -rf build target"
+fmt = "clang-format -i src/control/*.cpp src/control/*.hpp src/plugin/*.c src/plugin/*.h src/plugin/*.cpp src/plugin/*.hpp tests/*.cpp include/**/*.h include/**/*.hpp"
+
+# VPP Plugin Installation & Service
+install-plugin = "sudo ln -sf $PWD/build/lib/vpp_plugins/nat_pba_plugin.so /usr/lib/x86_64-linux-gnu/vpp_plugins/nat_pba_plugin.so"
+vpp-restart = "sudo systemctl restart vpp; sudo ln -sf /run/vpp/api.sock /run/vpp/api-node1.sock 2>/dev/null; sudo ln -sf /run/vpp/cli.sock /run/vpp/cli-node1.sock 2>/dev/null"
+vpp-status = "sudo systemctl status vpp"
+
+# Environment Setup
+setup-host = "sudo bash config/setup_hugepages.sh"
+setup-subnets = "sudo bash config/setup_subnets.sh"
+clean-subnets = "sudo ip netns del ns-inside 2>/dev/null; sudo ip netns del ns-outside 2>/dev/null; sudo ip link del veth-in-host 2>/dev/null; sudo ip link del veth-out-host 2>/dev/null"
+
+# Functional Verification & Traffic Testing
+test-ping = "sudo ip netns exec ns-inside ping -c 3 198.18.0.2"
+verify = "bash tests/ping_verify.sh"
+bench = "bash tests/bench_nat.sh"
+bench-churn = "./build/tests/bench_real_churn_10s all 30"
+bench-churn-quick = "./build/tests/bench_real_churn_10s all 5"
+bench-30s = "./build/tests/bench_real_churn_10s all 30"
+bench-churn-30s = "./build/tests/bench_real_churn_10s all 30"
+bench-uplink = "./build/tests/bench_real_churn_10s uplink 30"
+bench-downlink = "./build/tests/bench_real_churn_10s downlink 30"
+bench-scaling = "bash tests/bench_thread_scaling.sh 30"
+bench-scaling-quick = "bash tests/bench_thread_scaling.sh 5"
+bench-scaling-1s = "bash tests/bench_thread_scaling.sh 1"
+bench-scaling-strong = "sudo env NAT_BENCH_TOTAL_SESSIONS=48000 ./build/tests/bench_real_churn_10s scaling 5"
+bench-perf = "perf stat -e cycles,instructions,LLC-load-misses,dTLB-load-misses ./build/tests/bench_real_churn_10s 64 5 16"
+bench-1s = "./build/tests/bench_real_churn_10s all 1"
+bench-1t = "./build/tests/bench_real_churn_10s 64 30 1"
+bench-8t = "./build/tests/bench_real_churn_10s 64 30 8"
+bench-16t = "./build/tests/bench_real_churn_10s 64 30 16"
+bench-session = "./build/tests/bench_session_engine"
+bench-pcap = "bash tests/bench_pcap_pg.sh"
+bench-2way = "sudo ip netns exec ns-inside python3 tests/bench_stateful_2way.py"
+bench-15s = "sudo ip netns exec ns-inside python3 tests/bench_15s_stress.py"
+bench-100k = "sudo ip netns exec ns-inside python3 tests/bench_100k_15s.py"
+show-pba = "sudo vppctl show nat pba"
+show-sessions = "sudo vppctl show nat44 sessions"
+show-addresses = "sudo vppctl show nat44 addresses"
+show-interfaces = "sudo vppctl show nat44 interfaces"
+
+# Daemon & Lifecycle Execution
+run-ctl-node1 = "sudo ./build/src/control/nat-ctl config/config.yaml --node node1"
+run-ctl-node2 = "sudo ./build/src/control/nat-ctl config/config.yaml --node node2"
+cli-node1 = "sudo vppctl -s /run/vpp/cli-node1.sock"
+cli-node2 = "sudo vppctl -s /run/vpp/cli-node2.sock"

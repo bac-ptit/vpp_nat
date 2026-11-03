@@ -1,0 +1,130 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "environment": {
+        "CONDA_PREFIX": "${sourceDir}/.pixi/envs/default",
+        "PATH": "${sourceDir}/.pixi/envs/default/bin:$penv{PATH}",
+        "VPP_DIR": "/usr/lib/x86_64-linux-gnu/cmake/vpp"
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_C_STANDARD": "23",
+        "CMAKE_C_STANDARD_REQUIRED": "ON",
+        "CMAKE_C_EXTENSIONS": "ON",
+        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.pixi/envs/default;/usr/lib/x86_64-linux-gnu/cmake/vpp;/usr",
+        "VPP_DIR": "/usr/lib/x86_64-linux-gnu/cmake/vpp"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "displayName": "Release Build",
+      "description": "Optimized release build with -O3 -march=native",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "release-flat",
+      "inherits": "base",
+      "displayName": "Release Build with experimental flat hash",
+      "description": "Research backend: flat 16B hash instead of VPP bihash",
+      "binaryDir": "${sourceDir}/build-flat",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "NAT_EXPERIMENTAL_FLAT_HASH": "ON"
+      }
+    },
+    {
+      "name": "release-ha",
+      "inherits": "base",
+      "displayName": "Release Build with HA",
+      "description": "Release build with HA control plane enabled",
+      "binaryDir": "${sourceDir}/build-ha",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "NAT_ENABLE_HA": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "displayName": "Debug Build",
+      "description": "Debug build with symbols and assertions",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "asan",
+      "inherits": "base",
+      "displayName": "AddressSanitizer Build",
+      "description": "Build with AddressSanitizer and UndefinedBehaviorSanitizer",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_C_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "release-flat",
+      "configurePreset": "release-flat"
+    },
+    {
+      "name": "release-ha",
+      "configurePreset": "release-ha"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-ha",
+      "configurePreset": "release-ha",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

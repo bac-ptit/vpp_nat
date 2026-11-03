@@ -1,0 +1,37 @@
+# Build Artifacts
+build/
+build-*/
+cmake-build-*/
+bin/
+lib/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# IDE & Editor Configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Toolchain & Package Manager Environments
+.pixi/
+
+# Local agent state (taste, sessions, scratchpad)
+.commandcode/
+
+# Temporary, Backup & Large Log Files
+backup_before_hot_cold/
+conversation_history.md
+*.log
+*.tmp
+
+
+# Local AI/agent state
+.agents/
+.claude/
